@@ -298,11 +298,44 @@ function Library:CreateWindow(config)
         Utility:Tween(CloseBtn, {TextColor3 = Library.Theme.TextMuted}, 0.2)
     end)
     CloseBtn.MouseButton1Click:Connect(function()
-        -- Animasi destroy window
+        -- Animasi hide window
         Utility:Tween(Main, {Size = UDim2.new(0, 600, 0, 0), BackgroundTransparency = 1}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
         task.wait(0.3)
-        ScreenGui:Destroy()
+        Main.Visible = false
+        if WindowAPI.FloatBtn then WindowAPI.FloatBtn.Visible = true end
     end)
+
+    -- Floating Button (Image Gamepass)
+    local FloatBtn = Instance.new("ImageButton")
+    FloatBtn.Size = UDim2.new(0, 50, 0, 50)
+    FloatBtn.Position = UDim2.new(0, 20, 0.5, -25)
+    FloatBtn.BackgroundColor3 = Library.Theme.Container
+    FloatBtn.Image = "rbxassetid://1821750512"
+    FloatBtn.Visible = false
+    FloatBtn.Parent = ScreenGui
+    Instance.new("UICorner", FloatBtn).CornerRadius = UDim.new(1, 0)
+    
+    local FloatStroke = Instance.new("UIStroke")
+    FloatStroke.Color = Library.Theme.Accent
+    FloatStroke.Thickness = 1
+    FloatStroke.Parent = FloatBtn
+
+    Utility:MakeDraggable(FloatBtn, FloatBtn)
+
+    FloatBtn.MouseEnter:Connect(function()
+        Utility:Tween(FloatBtn, {Size = UDim2.new(0, 55, 0, 55)}, 0.2)
+    end)
+    FloatBtn.MouseLeave:Connect(function()
+        Utility:Tween(FloatBtn, {Size = UDim2.new(0, 50, 0, 50)}, 0.2)
+    end)
+    
+    FloatBtn.MouseButton1Click:Connect(function()
+        FloatBtn.Visible = false
+        Main.Visible = true
+        Utility:Tween(Main, {Size = UDim2.new(0, 600, 0, 420), BackgroundTransparency = 0}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    end)
+    
+    WindowAPI.FloatBtn = FloatBtn
 
     -- Sidebar
     local Sidebar = Instance.new("Frame")
