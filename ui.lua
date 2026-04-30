@@ -284,7 +284,7 @@ function Library:CreateWindow(config)
         return btn
     end
     
-    local MinimizeBtn = CreateControlButton("—", Library.Theme.ElementHover, function()
+    local MinimizeBtn = CreateControlButton("-", Library.Theme.ElementHover, function()
         Utility:Tween(UIScale, {Scale = 0.9}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
         local fade = Utility:Tween(Main, {BackgroundTransparency = 1}, 0.3)
         fade.Completed:Connect(function()
@@ -293,7 +293,7 @@ function Library:CreateWindow(config)
         end)
     end, 1)
 
-    local CloseBtn = CreateControlButton("✕", Library.Theme.Close, function()
+    local CloseBtn = CreateControlButton("X", Library.Theme.Close, function()
         Utility:Tween(UIScale, {Scale = 0.9}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
         Utility:Tween(Main, {BackgroundTransparency = 1}, 0.3)
         task.wait(0.3)
@@ -500,11 +500,16 @@ function Library:CreateWindow(config)
 
             local row = Instance.new("Frame")
             row.Size = UDim2.new(1, 0, 0, 38)
-            row.BackgroundColor3 = Library.Theme.Element
-            row.BackgroundTransparency = 0.3
+            row.BackgroundTransparency = 1
             row.Parent = Page
-            Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
-            Utility:ApplyBorder(row)
+            
+            local sep = Instance.new("Frame")
+            sep.Size = UDim2.new(1, 0, 0, 1)
+            sep.Position = UDim2.new(0, 0, 1, -1)
+            sep.BackgroundColor3 = Library.Theme.Border
+            sep.BackgroundTransparency = 0.85
+            sep.BorderSizePixel = 0
+            sep.Parent = row
 
             local lbl = Instance.new("TextLabel")
             lbl.Text = tConfig.Title or "Toggle"
@@ -577,11 +582,16 @@ function Library:CreateWindow(config)
 
             local row = Instance.new("Frame")
             row.Size = UDim2.new(1, 0, 0, 48)
-            row.BackgroundColor3 = Library.Theme.Element
-            row.BackgroundTransparency = 0.3
+            row.BackgroundTransparency = 1
             row.Parent = Page
-            Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
-            Utility:ApplyBorder(row)
+
+            local sep = Instance.new("Frame")
+            sep.Size = UDim2.new(1, 0, 0, 1)
+            sep.Position = UDim2.new(0, 0, 1, -1)
+            sep.BackgroundColor3 = Library.Theme.Border
+            sep.BackgroundTransparency = 0.85
+            sep.BorderSizePixel = 0
+            sep.Parent = row
 
             local lbl = Instance.new("TextLabel")
             lbl.Text = sConfig.Title or "Slider"
@@ -726,25 +736,32 @@ function Library:CreateWindow(config)
             local btn = Instance.new("TextButton")
             btn.Size = UDim2.new(1, 0, 0, 36)
             btn.BackgroundColor3 = Library.Theme.Element
-            btn.BackgroundTransparency = 0.3
+            btn.BackgroundTransparency = 1
             btn.Text = bConfig.Title or "Button"
             btn.Font = Enum.Font.GothamMedium
             btn.TextSize = 13
             btn.TextColor3 = Library.Theme.Text
             btn.AutoButtonColor = false
             btn.Parent = Page
-            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
-            Utility:ApplyBorder(btn)
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
+            local sep = Instance.new("Frame")
+            sep.Size = UDim2.new(1, 0, 0, 1)
+            sep.Position = UDim2.new(0, 0, 1, -1)
+            sep.BackgroundColor3 = Library.Theme.Border
+            sep.BackgroundTransparency = 0.85
+            sep.BorderSizePixel = 0
+            sep.Parent = btn
             
             local btnScale = Instance.new("UIScale")
             btnScale.Parent = btn
 
             btn.MouseEnter:Connect(function()
-                Utility:Tween(btn, {BackgroundColor3 = Library.Theme.ElementHover}, 0.2)
+                Utility:Tween(btn, {BackgroundTransparency = 0.8}, 0.2)
                 Utility:Tween(btnScale, {Scale = 1.02}, 0.2, Enum.EasingStyle.Back)
             end)
             btn.MouseLeave:Connect(function()
-                Utility:Tween(btn, {BackgroundColor3 = Library.Theme.Element}, 0.2)
+                Utility:Tween(btn, {BackgroundTransparency = 1}, 0.2)
                 Utility:Tween(btnScale, {Scale = 1}, 0.2)
             end)
             btn.MouseButton1Down:Connect(function()
@@ -778,12 +795,17 @@ function Library:CreateWindow(config)
 
             local row = Instance.new("Frame")
             row.Size = UDim2.new(1, 0, 0, 38)
-            row.BackgroundColor3 = Library.Theme.Element
-            row.BackgroundTransparency = 0.3
+            row.BackgroundTransparency = 1
             row.ClipsDescendants = true
             row.Parent = Page
-            Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
-            Utility:ApplyBorder(row)
+
+            local sep = Instance.new("Frame")
+            sep.Size = UDim2.new(1, 0, 0, 1)
+            sep.Position = UDim2.new(0, 0, 1, -1)
+            sep.BackgroundColor3 = Library.Theme.Border
+            sep.BackgroundTransparency = 0.85
+            sep.BorderSizePixel = 0
+            sep.Parent = row
 
             local topBtn = Instance.new("TextButton")
             topBtn.Size = UDim2.new(1, 0, 0, 42)
