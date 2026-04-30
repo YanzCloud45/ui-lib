@@ -1,21 +1,26 @@
 local Library = {
-    Version = "3.0 Ultra Modern",
+    Version = "4.0 macOS Edition",
     Theme = {
-        Background = Color3.fromRGB(15, 15, 20),
-        Container = Color3.fromRGB(22, 22, 28),
-        Element = Color3.fromRGB(28, 28, 35),
-        ElementHover = Color3.fromRGB(38, 38, 45),
-        Accent = Color3.fromRGB(180, 80, 255), -- Purple
-        AccentSecondary = Color3.fromRGB(0, 230, 255), -- Cyan
-        Text = Color3.fromRGB(245, 245, 255),
-        TextMuted = Color3.fromRGB(140, 140, 155),
-        BorderOpacity = 0.3,
+        Background = Color3.fromRGB(24, 24, 26), -- macOS dark mode
+        Container = Color3.fromRGB(32, 32, 35),
+        Element = Color3.fromRGB(42, 42, 46),
+        ElementHover = Color3.fromRGB(52, 52, 56),
+        Accent = Color3.fromRGB(10, 132, 255), -- iOS Blue
+        Text = Color3.fromRGB(245, 245, 245),
+        TextMuted = Color3.fromRGB(140, 140, 145),
+        Border = Color3.fromRGB(255, 255, 255),
+        BorderOpacity = 0.15,
         
-        -- Notification Colors
-        Success = Color3.fromRGB(50, 220, 120),
-        Error = Color3.fromRGB(240, 80, 80),
-        Warning = Color3.fromRGB(250, 200, 50),
-        Info = Color3.fromRGB(60, 160, 240)
+        -- Traffic Lights
+        Close = Color3.fromRGB(255, 95, 86),
+        Minimize = Color3.fromRGB(255, 189, 46),
+        Maximize = Color3.fromRGB(39, 201, 63),
+        
+        -- Notifications
+        Success = Color3.fromRGB(48, 209, 88),
+        Error = Color3.fromRGB(255, 69, 58),
+        Warning = Color3.fromRGB(255, 159, 10),
+        Info = Color3.fromRGB(10, 132, 255)
     }
 }
 
@@ -32,7 +37,7 @@ local function GetGuiParent()
 end
 
 -- ========================================================================
--- UTILITY FUNCTIONS (ANIMATIONS & EFFECTS)
+-- UTILITY FUNCTIONS
 -- ========================================================================
 local Utility = {}
 
@@ -44,35 +49,6 @@ function Utility:Tween(instance, prop, time, style, direction)
     local tween = TweenService:Create(instance, tweenInfo, prop)
     tween:Play()
     return tween
-end
-
-function Utility:CreateRipple(parent)
-    local ripple = Instance.new("Frame")
-    ripple.Name = "Ripple"
-    ripple.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    ripple.BackgroundTransparency = 0.8
-    ripple.ZIndex = parent.ZIndex + 1
-    ripple.Size = UDim2.new(0, 0, 0, 0)
-    ripple.Position = UDim2.new(0.5, 0, 0.5, 0)
-    ripple.AnchorPoint = Vector2.new(0.5, 0.5)
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(1, 0)
-    corner.Parent = ripple
-    ripple.Parent = parent
-    
-    local maxSize = math.max(parent.AbsoluteSize.X, parent.AbsoluteSize.Y) * 1.5
-    
-    local tweenInfo = TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local tween = TweenService:Create(ripple, tweenInfo, {
-        Size = UDim2.new(0, maxSize, 0, maxSize),
-        BackgroundTransparency = 1
-    })
-    
-    tween:Play()
-    tween.Completed:Connect(function()
-        ripple:Destroy()
-    end)
 end
 
 function Utility:MakeDraggable(trigger, target)
@@ -110,76 +86,20 @@ function Utility:MakeDraggable(trigger, target)
     end)
 end
 
--- Gradient Border Utility
-function Utility:ApplyGradientBorder(parent, thickness)
+function Utility:ApplyBorder(parent, transparency)
     local stroke = Instance.new("UIStroke")
-    stroke.Thickness = thickness or 1
-    stroke.Transparency = 1 - Library.Theme.BorderOpacity
+    stroke.Color = Library.Theme.Border
+    stroke.Thickness = 1
+    stroke.Transparency = transparency or Library.Theme.BorderOpacity
     stroke.Parent = parent
-
-    local grad = Instance.new("UIGradient")
-    grad.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Library.Theme.AccentSecondary),
-        ColorSequenceKeypoint.new(0.5, Library.Theme.Accent),
-        ColorSequenceKeypoint.new(1, Library.Theme.AccentSecondary)
-    })
-    grad.Rotation = 45
-    grad.Parent = stroke
-    
-    -- Animasi perputaran gradient secara terus-menerus
-    task.spawn(function()
-        local t = 0
-        while parent.Parent do
-            t = t + RunService.RenderStepped:Wait() * 45
-            grad.Rotation = t % 360
-        end
-    end)
-    
-    return stroke, grad
-end
-
--- Multi Layer Shadow Utility
-function Utility:CreateShadows(parent, radius, offsetOuter, offsetInner)
-    radius = radius or 15
-    offsetOuter = offsetOuter or 5
-    offsetInner = offsetInner or 2
-    
-    -- Layer 1: Outer shadow yang lebar
-    local Outer = Instance.new("ImageLabel")
-    Outer.Name = "OuterShadow"
-    Outer.Image = "rbxassetid://6014261900"
-    Outer.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    Outer.ImageTransparency = 0.7
-    Outer.ScaleType = Enum.ScaleType.Slice
-    Outer.SliceCenter = Rect.new(49, 49, 450, 450)
-    Outer.Size = UDim2.new(1, radius*4, 1, radius*4)
-    Outer.Position = UDim2.new(0, -radius*2, 0, -radius*2 + offsetOuter)
-    Outer.BackgroundTransparency = 1
-    Outer.ZIndex = parent.ZIndex - 2
-    Outer.Parent = parent
-
-    -- Layer 2: Inner shadow yang solid
-    local Inner = Instance.new("ImageLabel")
-    Inner.Name = "InnerShadow"
-    Inner.Image = "rbxassetid://6015897843"
-    Inner.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    Inner.ImageTransparency = 0.8
-    Inner.ScaleType = Enum.ScaleType.Slice
-    Inner.SliceCenter = Rect.new(49, 49, 450, 450)
-    Inner.Size = UDim2.new(1, radius*2, 1, radius*2)
-    Inner.Position = UDim2.new(0, -radius, 0, -radius + offsetInner)
-    Inner.BackgroundTransparency = 1
-    Inner.ZIndex = parent.ZIndex - 1
-    Inner.Parent = parent
-    
-    return Outer, Inner
+    return stroke
 end
 
 -- ========================================================================
 -- NOTIFICATION SYSTEM
 -- ========================================================================
 local NotifGui = Instance.new("ScreenGui")
-NotifGui.Name = "UltraModernNotifGUI"
+NotifGui.Name = "macOSNotifGUI"
 NotifGui.Parent = GetGuiParent()
 NotifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -224,7 +144,7 @@ function Library:Notify(config)
 
     local titleLbl = Instance.new("TextLabel")
     titleLbl.Text = title
-    titleLbl.Font = Enum.Font.GothamBold
+    titleLbl.Font = Enum.Font.GothamMedium
     titleLbl.TextSize = 14
     titleLbl.TextColor3 = Library.Theme.Text
     titleLbl.Size = UDim2.new(1, -20, 0, 20)
@@ -246,8 +166,8 @@ function Library:Notify(config)
     descLbl.Parent = notif
     
     local barBG = Instance.new("Frame")
-    barBG.Size = UDim2.new(1, 0, 0, 4)
-    barBG.Position = UDim2.new(0, 0, 1, -4)
+    barBG.Size = UDim2.new(1, 0, 0, 2)
+    barBG.Position = UDim2.new(0, 0, 1, -2)
     barBG.BackgroundColor3 = Library.Theme.Container
     barBG.BorderSizePixel = 0
     barBG.Parent = notif
@@ -275,7 +195,7 @@ end
 -- ========================================================================
 function Library:CreateWindow(config)
     config = config or {}
-    local WindowTitle = config.Title or "Ultra Modern Hub"
+    local WindowTitle = config.Title or "macOS Hub"
     
     local WindowAPI = {
         Tabs = {},
@@ -283,150 +203,177 @@ function Library:CreateWindow(config)
     }
 
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "UltraModernLibraryGUI"
+    ScreenGui.Name = "macOSLibraryGUI"
     ScreenGui.Parent = GetGuiParent()
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    -- MAIN WINDOW (Acrylic/Glassmorphism)
+    -- MAIN WINDOW (Glassmorphism / Blur)
     local Main = Instance.new("Frame")
     Main.Size = UDim2.new(0, 650, 0, 450)
     Main.Position = UDim2.new(0.5, -325, 0.5, -225)
     Main.BackgroundColor3 = Library.Theme.Background
-    Main.BackgroundTransparency = 0.15 -- Acrylic blur effect
+    Main.BackgroundTransparency = 0.15 
     Main.Parent = ScreenGui
-    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 16) -- Rounded 16px
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 14) -- 14px as requested
     
-    -- Border Gradient & Multi Layer Shadow
-    Utility:ApplyGradientBorder(Main, 1)
-    Utility:CreateShadows(Main, 20, 8, 3)
+    local UIScale = Instance.new("UIScale")
+    UIScale.Scale = 0.95
+    UIScale.Parent = Main
+
+    Utility:ApplyBorder(Main, Library.Theme.BorderOpacity)
+    
+    -- Smooth Shadow via UIStroke Blur Trick is not native to Roblox, so we omit black boxes.
+    -- We just keep the clean UIStroke.
+    
+    -- Open Anim
+    Utility:Tween(UIScale, {Scale = 1}, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 
     -- TITLE BAR
     local TitleBar = Instance.new("Frame")
-    TitleBar.Size = UDim2.new(1, 0, 0, 50)
+    TitleBar.Size = UDim2.new(1, 0, 0, 40)
     TitleBar.BackgroundTransparency = 1
     TitleBar.Parent = Main
     Utility:MakeDraggable(TitleBar, Main)
 
-    -- Drag Indicator
-    local DragIndicator = Instance.new("Frame")
-    DragIndicator.Size = UDim2.new(0, 50, 0, 4)
-    DragIndicator.Position = UDim2.new(0.5, -25, 0, 8)
-    DragIndicator.BackgroundColor3 = Library.Theme.TextMuted
-    DragIndicator.BackgroundTransparency = 0.5
-    DragIndicator.Parent = TitleBar
-    Instance.new("UICorner", DragIndicator).CornerRadius = UDim.new(1, 0)
-
     local TitleText = Instance.new("TextLabel")
     TitleText.Text = WindowTitle
-    TitleText.Font = Enum.Font.GothamBold
-    TitleText.TextSize = 16
+    TitleText.Font = Enum.Font.GothamMedium
+    TitleText.TextSize = 13
     TitleText.TextColor3 = Library.Theme.Text
-    TitleText.Position = UDim2.new(0, 20, 0, 0)
-    TitleText.Size = UDim2.new(0, 200, 1, 0)
+    TitleText.Position = UDim2.new(0, 0, 0, 0)
+    TitleText.Size = UDim2.new(1, 0, 1, 0)
     TitleText.BackgroundTransparency = 1
-    TitleText.TextXAlignment = Enum.TextXAlignment.Left
+    TitleText.TextXAlignment = Enum.TextXAlignment.Center
     TitleText.Parent = TitleBar
 
-    -- CLOSE BUTTON
-    local CloseBtn = Instance.new("TextButton")
-    CloseBtn.Size = UDim2.new(0, 30, 0, 30)
-    CloseBtn.Position = UDim2.new(1, -40, 0.5, -15)
-    CloseBtn.BackgroundTransparency = 1
-    CloseBtn.Text = "✕"
-    CloseBtn.TextColor3 = Library.Theme.TextMuted
-    CloseBtn.Font = Enum.Font.GothamBold
-    CloseBtn.TextSize = 16
-    CloseBtn.Parent = TitleBar
+    -- macOS TRAFFIC LIGHT BUTTONS
+    local TrafficContainer = Instance.new("Frame")
+    TrafficContainer.Size = UDim2.new(0, 60, 1, 0)
+    TrafficContainer.Position = UDim2.new(0, 15, 0, 0)
+    TrafficContainer.BackgroundTransparency = 1
+    TrafficContainer.Parent = TitleBar
     
-    CloseBtn.MouseEnter:Connect(function()
-        Utility:Tween(CloseBtn, {TextColor3 = Library.Theme.Error}, 0.2)
-    end)
-    CloseBtn.MouseLeave:Connect(function()
-        Utility:Tween(CloseBtn, {TextColor3 = Library.Theme.TextMuted}, 0.2)
-    end)
-    CloseBtn.MouseButton1Click:Connect(function()
-        -- Animasi Hide Window
-        Utility:Tween(Main, {Size = UDim2.new(0, 650, 0, 0), BackgroundTransparency = 1}, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+    local TrafficLayout = Instance.new("UIListLayout")
+    TrafficLayout.FillDirection = Enum.FillDirection.Horizontal
+    TrafficLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    TrafficLayout.Padding = UDim.new(0, 8)
+    TrafficLayout.Parent = TrafficContainer
+
+    local function CreateTrafficLight(color, action)
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0, 12, 0, 12)
+        btn.BackgroundColor3 = color
+        btn.BackgroundTransparency = 1
+        btn.Text = ""
+        btn.Parent = TrafficContainer
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
+        
+        local stroke = Instance.new("UIStroke")
+        stroke.Color = color
+        stroke.Thickness = 1
+        stroke.Parent = btn
+
+        btn.MouseEnter:Connect(function()
+            Utility:Tween(btn, {BackgroundTransparency = 0}, 0.15)
+        end)
+        btn.MouseLeave:Connect(function()
+            Utility:Tween(btn, {BackgroundTransparency = 1}, 0.15)
+        end)
+        btn.MouseButton1Click:Connect(action)
+        return btn
+    end
+
+    local CloseBtn = CreateTrafficLight(Library.Theme.Close, function()
+        Utility:Tween(UIScale, {Scale = 0.95}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+        Utility:Tween(Main, {BackgroundTransparency = 1}, 0.3)
         task.wait(0.3)
-        Main.Visible = false
-        if WindowAPI.FloatBtn then WindowAPI.FloatBtn.Visible = true end
+        ScreenGui:Destroy()
+    end)
+    
+    local MinimizeBtn = CreateTrafficLight(Library.Theme.Minimize, function()
+        Utility:Tween(UIScale, {Scale = 0.95}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+        local fade = Utility:Tween(Main, {BackgroundTransparency = 1}, 0.3)
+        for _, v in ipairs(Main:GetDescendants()) do
+            if v:IsA("TextLabel") or v:IsA("ImageLabel") or v:IsA("UIStroke") then
+                Utility:Tween(v, {Transparency = 1}, 0.3)
+            end
+        end
+        fade.Completed:Connect(function()
+            Main.Visible = false
+            if WindowAPI.FloatBtn then WindowAPI.FloatBtn.Visible = true end
+        end)
+    end)
+    
+    local MaximizeBtn = CreateTrafficLight(Library.Theme.Maximize, function()
+        -- Reset position to center
+        Utility:Tween(Main, {Position = UDim2.new(0.5, -325, 0.5, -225)}, 0.4, Enum.EasingStyle.Back)
     end)
 
     -- ========================================================================
     -- FLOATING BUTTON (SQUIRCLE)
     -- ========================================================================
     local FloatBtn = Instance.new("ImageButton")
-    FloatBtn.Size = UDim2.new(0, 65, 0, 65)
-    FloatBtn.Position = UDim2.new(0, 25, 0.5, -32)
-    FloatBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-    FloatBtn.BackgroundTransparency = 0.15
+    FloatBtn.Size = UDim2.new(0, 55, 0, 55)
+    FloatBtn.Position = UDim2.new(0, 25, 0.5, -27)
+    FloatBtn.BackgroundTransparency = 1
     FloatBtn.Image = "rbxassetid://131068740559292"
     FloatBtn.Visible = false
     FloatBtn.Parent = ScreenGui
-    Instance.new("UICorner", FloatBtn).CornerRadius = UDim.new(0, 16) -- Squircle shape
+    Instance.new("UICorner", FloatBtn).CornerRadius = UDim.new(0, 14) -- Squircle shape
     
-    Utility:ApplyGradientBorder(FloatBtn, 2)
-    Utility:CreateShadows(FloatBtn, 15, 5, 2)
+    Utility:ApplyBorder(FloatBtn, 0.5)
     
-    -- Layer 3: Glow effect saat hover
-    local FloatGlow = Instance.new("ImageLabel")
-    FloatGlow.Image = "rbxassetid://6014261900"
-    FloatGlow.ImageColor3 = Library.Theme.Accent
-    FloatGlow.ImageTransparency = 1
-    FloatGlow.ScaleType = Enum.ScaleType.Slice
-    FloatGlow.SliceCenter = Rect.new(49, 49, 450, 450)
-    FloatGlow.Size = UDim2.new(1, 40, 1, 40)
-    FloatGlow.Position = UDim2.new(0, -20, 0, -20)
-    FloatGlow.BackgroundTransparency = 1
-    FloatGlow.ZIndex = FloatBtn.ZIndex - 1
-    FloatGlow.Parent = FloatBtn
+    local FloatScale = Instance.new("UIScale")
+    FloatScale.Scale = 1
+    FloatScale.Parent = FloatBtn
 
     Utility:MakeDraggable(FloatBtn, FloatBtn)
 
     FloatBtn.MouseEnter:Connect(function()
-        Utility:Tween(FloatBtn, {Size = UDim2.new(0, 72, 0, 72)}, 0.4, Enum.EasingStyle.Quint)
-        Utility:Tween(FloatGlow, {ImageTransparency = 0.3}, 0.4, Enum.EasingStyle.Quint)
+        Utility:Tween(FloatScale, {Scale = 1.05}, 0.3, Enum.EasingStyle.Back)
     end)
     FloatBtn.MouseLeave:Connect(function()
-        Utility:Tween(FloatBtn, {Size = UDim2.new(0, 65, 0, 65)}, 0.4, Enum.EasingStyle.Quint)
-        Utility:Tween(FloatGlow, {ImageTransparency = 1}, 0.4, Enum.EasingStyle.Quint)
+        Utility:Tween(FloatScale, {Scale = 1}, 0.3, Enum.EasingStyle.Back)
     end)
     
     FloatBtn.MouseButton1Click:Connect(function()
         FloatBtn.Visible = false
         Main.Visible = true
-        Utility:Tween(Main, {Size = UDim2.new(0, 650, 0, 450), BackgroundTransparency = 0.15}, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+        Main.BackgroundTransparency = 0.15
+        for _, v in ipairs(Main:GetDescendants()) do
+            if v:IsA("TextLabel") or v:IsA("ImageLabel") then
+                Utility:Tween(v, {Transparency = 0}, 0.3)
+            elseif v:IsA("UIStroke") then
+                if v.Parent == Main then
+                    Utility:Tween(v, {Transparency = Library.Theme.BorderOpacity}, 0.3)
+                end
+            end
+        end
+        Utility:Tween(UIScale, {Scale = 1}, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
     end)
     
     WindowAPI.FloatBtn = FloatBtn
 
     -- ========================================================================
-    -- SIDEBAR & CONTAINER
+    -- SIDEBAR (Finder Style)
     -- ========================================================================
     local Sidebar = Instance.new("Frame")
-    Sidebar.Size = UDim2.new(0, 170, 1, -50)
-    Sidebar.Position = UDim2.new(0, 0, 0, 50)
+    Sidebar.Size = UDim2.new(0, 160, 1, -40)
+    Sidebar.Position = UDim2.new(0, 0, 0, 40)
     Sidebar.BackgroundTransparency = 1
     Sidebar.Parent = Main
 
     local SidebarList = Instance.new("UIListLayout")
-    SidebarList.Padding = UDim.new(0, 8)
+    SidebarList.Padding = UDim.new(0, 4)
     SidebarList.HorizontalAlignment = Enum.HorizontalAlignment.Center
     SidebarList.Parent = Sidebar
 
     local Container = Instance.new("Frame")
-    Container.Size = UDim2.new(1, -180, 1, -65)
-    Container.Position = UDim2.new(0, 170, 0, 50)
-    Container.BackgroundColor3 = Library.Theme.Container
-    Container.BackgroundTransparency = 0.2
+    Container.Size = UDim2.new(1, -160, 1, -40)
+    Container.Position = UDim2.new(0, 160, 0, 40)
+    Container.BackgroundTransparency = 1
     Container.Parent = Main
-    Instance.new("UICorner", Container).CornerRadius = UDim.new(0, 12)
-    
-    local UIStrokeContainer = Instance.new("UIStroke")
-    UIStrokeContainer.Color = Library.Theme.Element
-    UIStrokeContainer.Thickness = 1
-    UIStrokeContainer.Parent = Container
 
     local Pages = Instance.new("Folder")
     Pages.Name = "Pages"
@@ -438,17 +385,18 @@ function Library:CreateWindow(config)
     function WindowAPI:AddTab(tabConfig)
         tabConfig = tabConfig or {}
         local tabName = type(tabConfig) == "string" and tabConfig or tabConfig.Title or "Tab"
-        local tabIcon = tabConfig.Icon or "✦"
+        local tabIcon = tabConfig.Icon or "⌘" 
         
         local TabBtn = Instance.new("TextButton")
-        TabBtn.Size = UDim2.new(1, -24, 0, 42)
-        TabBtn.BackgroundColor3 = Library.Theme.Element
+        TabBtn.Size = UDim2.new(1, -16, 0, 32)
+        TabBtn.BackgroundColor3 = Library.Theme.ElementHover
         TabBtn.BackgroundTransparency = 1
         TabBtn.Text = ""
         TabBtn.AutoButtonColor = false
         TabBtn.Parent = Sidebar
-        Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 10)
+        Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
 
+        -- Garis vertikal indikator active tab (3px)
         local TabIndicator = Instance.new("Frame")
         TabIndicator.Size = UDim2.new(0, 3, 0, 0)
         TabIndicator.Position = UDim2.new(0, 0, 0.5, 0)
@@ -458,49 +406,68 @@ function Library:CreateWindow(config)
         Instance.new("UICorner", TabIndicator).CornerRadius = UDim.new(1, 0)
 
         local TabTitle = Instance.new("TextLabel")
-        TabTitle.Text = tabIcon .. "   " .. tabName
+        TabTitle.Text = tabIcon .. "  " .. tabName
         TabTitle.Font = Enum.Font.GothamMedium
         TabTitle.TextSize = 13
         TabTitle.TextColor3 = Library.Theme.TextMuted
-        TabTitle.Size = UDim2.new(1, -15, 1, 0)
-        TabTitle.Position = UDim2.new(0, 15, 0, 0)
+        TabTitle.Size = UDim2.new(1, -12, 1, 0)
+        TabTitle.Position = UDim2.new(0, 12, 0, 0)
         TabTitle.BackgroundTransparency = 1
         TabTitle.TextXAlignment = Enum.TextXAlignment.Left
         TabTitle.Parent = TabBtn
 
+        -- CanvasGroup for Crossfade Animation
+        local PageGroup = Instance.new("CanvasGroup")
+        PageGroup.Size = UDim2.new(1, 0, 1, 0)
+        PageGroup.BackgroundTransparency = 1
+        PageGroup.GroupTransparency = 1
+        PageGroup.Visible = false
+        PageGroup.Parent = Pages
+
+        -- ScrollingFrame with thin scrollbar
         local Page = Instance.new("ScrollingFrame")
         Page.Size = UDim2.new(1, -20, 1, -20)
-        Page.Position = UDim2.new(0, 10, 0, 10)
+        Page.Position = UDim2.new(0, 10, 0, 0)
         Page.BackgroundTransparency = 1
-        Page.ScrollBarThickness = 2
-        Page.ScrollBarImageColor3 = Library.Theme.Accent
-        Page.Visible = false
-        Page.Parent = Pages
+        Page.ScrollBarThickness = 3
+        Page.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+        Page.ScrollBarImageTransparency = 1
+        Page.Parent = PageGroup
         
         local PageLayout = Instance.new("UIListLayout")
-        PageLayout.Padding = UDim.new(0, 12)
+        PageLayout.Padding = UDim.new(0, 8)
         PageLayout.Parent = Page
         
         PageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
             Page.CanvasSize = UDim2.new(0, 0, 0, PageLayout.AbsoluteContentSize.Y + 20)
         end)
+        
+        -- Auto-hide scrollbar
+        local scrollHideTask
+        Page:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+            Utility:Tween(Page, {ScrollBarImageTransparency = 0.4}, 0.2)
+            if scrollHideTask then task.cancel(scrollHideTask) end
+            scrollHideTask = task.spawn(function()
+                task.wait(1)
+                Utility:Tween(Page, {ScrollBarImageTransparency = 1}, 0.5)
+            end)
+        end)
 
         TabBtn.MouseEnter:Connect(function()
-            if WindowAPI.CurrentTab ~= Page then
-                Utility:Tween(TabBtn, {BackgroundTransparency = 0.5}, 0.2)
+            if WindowAPI.CurrentTab ~= PageGroup then
+                Utility:Tween(TabBtn, {BackgroundTransparency = 0.9}, 0.2) -- Opacity 0.1
                 Utility:Tween(TabTitle, {TextColor3 = Library.Theme.Text}, 0.2)
             end
         end)
         TabBtn.MouseLeave:Connect(function()
-            if WindowAPI.CurrentTab ~= Page then
+            if WindowAPI.CurrentTab ~= PageGroup then
                 Utility:Tween(TabBtn, {BackgroundTransparency = 1}, 0.2)
                 Utility:Tween(TabTitle, {TextColor3 = Library.Theme.TextMuted}, 0.2)
             end
         end)
 
         TabBtn.MouseButton1Click:Connect(function()
-            Utility:CreateRipple(TabBtn)
-            if WindowAPI.CurrentTab == Page then return end
+            if WindowAPI.CurrentTab == PageGroup then return end
             
             for _, btn in ipairs(Sidebar:GetChildren()) do
                 if btn:IsA("TextButton") and btn ~= TabBtn then
@@ -509,32 +476,40 @@ function Library:CreateWindow(config)
                     Utility:Tween(btn.Frame, {Size = UDim2.new(0, 3, 0, 0)}, 0.2)
                 end
             end
-            for _, p in ipairs(Pages:GetChildren()) do
-                p.Visible = false
+            
+            -- Crossfade
+            if WindowAPI.CurrentTab then
+                local prev = WindowAPI.CurrentTab
+                Utility:Tween(prev, {GroupTransparency = 1}, 0.2).Completed:Connect(function()
+                    prev.Visible = false
+                end)
             end
             
-            WindowAPI.CurrentTab = Page
-            Page.Visible = true
-            Utility:Tween(TabBtn, {BackgroundTransparency = 0}, 0.2)
+            WindowAPI.CurrentTab = PageGroup
+            PageGroup.Visible = true
+            Utility:Tween(PageGroup, {GroupTransparency = 0}, 0.3)
+            
+            Utility:Tween(TabBtn, {BackgroundTransparency = 0.9}, 0.2)
             Utility:Tween(TabTitle, {TextColor3 = Library.Theme.Text}, 0.2)
-            Utility:Tween(TabIndicator, {Size = UDim2.new(0, 4, 0, 24)}, 0.2)
+            Utility:Tween(TabIndicator, {Size = UDim2.new(0, 3, 0, 16)}, 0.2)
         end)
 
         if #WindowAPI.Tabs == 0 then
-            WindowAPI.CurrentTab = Page
-            Page.Visible = true
-            TabBtn.BackgroundTransparency = 0
+            WindowAPI.CurrentTab = PageGroup
+            PageGroup.Visible = true
+            PageGroup.GroupTransparency = 0
+            TabBtn.BackgroundTransparency = 0.9
             TabTitle.TextColor3 = Library.Theme.Text
-            TabIndicator.Size = UDim2.new(0, 4, 0, 24)
+            TabIndicator.Size = UDim2.new(0, 3, 0, 16)
         end
-        table.insert(WindowAPI.Tabs, Page)
+        table.insert(WindowAPI.Tabs, PageGroup)
 
         -- ========================================================================
         -- ELEMENTS API
         -- ========================================================================
         local TabAPI = {}
 
-        -- >>> TOGGLE <<<
+        -- >>> TOGGLE (iOS 16 Style) <<<
         function TabAPI:AddToggle(tConfig)
             tConfig = tConfig or {}
             local ToggleAPI = {
@@ -543,59 +518,49 @@ function Library:CreateWindow(config)
             }
 
             local row = Instance.new("Frame")
-            row.Size = UDim2.new(1, 0, 0, 48)
+            row.Size = UDim2.new(1, 0, 0, 44)
             row.BackgroundColor3 = Library.Theme.Element
+            row.BackgroundTransparency = 0.3
             row.Parent = Page
-            Instance.new("UICorner", row).CornerRadius = UDim.new(0, 12)
+            Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
+            Utility:ApplyBorder(row)
 
             local lbl = Instance.new("TextLabel")
             lbl.Text = tConfig.Title or "Toggle"
             lbl.Font = Enum.Font.GothamMedium
             lbl.TextSize = 13
             lbl.TextColor3 = Library.Theme.Text
-            lbl.Size = UDim2.new(1, -80, 1, 0)
+            lbl.Size = UDim2.new(1, -60, 1, 0)
             lbl.Position = UDim2.new(0, 15, 0, 0)
             lbl.BackgroundTransparency = 1
             lbl.TextXAlignment = Enum.TextXAlignment.Left
             lbl.Parent = row
 
+            -- Capsule 44x24
             local toggleBG = Instance.new("TextButton")
-            toggleBG.Size = UDim2.new(0, 48, 0, 26)
-            toggleBG.Position = UDim2.new(1, -65, 0.5, -13)
-            toggleBG.BackgroundColor3 = ToggleAPI.Value and Library.Theme.Accent or Library.Theme.Container
+            toggleBG.Size = UDim2.new(0, 44, 0, 24)
+            toggleBG.Position = UDim2.new(1, -54, 0.5, -12)
+            toggleBG.BackgroundColor3 = ToggleAPI.Value and Library.Theme.Success or Library.Theme.Container
             toggleBG.Text = ""
             toggleBG.AutoButtonColor = false
             toggleBG.Parent = row
             Instance.new("UICorner", toggleBG).CornerRadius = UDim.new(1, 0)
-
-            local UIStroke = Instance.new("UIStroke")
-            UIStroke.Color = Library.Theme.TextMuted
-            UIStroke.Transparency = 0.8
-            UIStroke.Parent = toggleBG
+            Utility:ApplyBorder(toggleBG, 0.3)
 
             local circle = Instance.new("Frame")
             circle.Size = UDim2.new(0, 20, 0, 20)
-            circle.Position = ToggleAPI.Value and UDim2.new(1, -23, 0.5, -10) or UDim2.new(0, 3, 0.5, -10)
+            circle.Position = ToggleAPI.Value and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
             circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             circle.Parent = toggleBG
             Instance.new("UICorner", circle).CornerRadius = UDim.new(1, 0)
-            
-            local circleShadow = Instance.new("ImageLabel")
-            circleShadow.Image = "rbxassetid://6015897843"
-            circleShadow.ImageColor3 = Color3.fromRGB(0,0,0)
-            circleShadow.ImageTransparency = 0.6
-            circleShadow.Size = UDim2.new(1, 12, 1, 12)
-            circleShadow.Position = UDim2.new(0, -6, 0, -6)
-            circleShadow.BackgroundTransparency = 1
-            circleShadow.ZIndex = circle.ZIndex - 1
-            circleShadow.Parent = circle
+            Utility:ApplyBorder(circle, 0.8)
 
             local function UpdateVisuals()
-                local tPos = ToggleAPI.Value and UDim2.new(1, -23, 0.5, -10) or UDim2.new(0, 3, 0.5, -10)
-                local tCol = ToggleAPI.Value and Library.Theme.Accent or Library.Theme.Container
+                local tPos = ToggleAPI.Value and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
+                local tCol = ToggleAPI.Value and Library.Theme.Success or Library.Theme.Container
+                -- Animasi Spring
                 Utility:Tween(circle, {Position = tPos}, 0.35, Enum.EasingStyle.Back)
                 Utility:Tween(toggleBG, {BackgroundColor3 = tCol}, 0.25)
-                Utility:Tween(UIStroke, {Transparency = ToggleAPI.Value and 1 or 0.8}, 0.25)
             end
 
             toggleBG.MouseButton1Click:Connect(function()
@@ -619,7 +584,7 @@ function Library:CreateWindow(config)
             return ToggleAPI
         end
 
-        -- >>> SLIDER <<<
+        -- >>> SLIDER (macOS Style) <<<
         function TabAPI:AddSlider(sConfig)
             sConfig = sConfig or {}
             local SliderAPI = {
@@ -630,10 +595,12 @@ function Library:CreateWindow(config)
             }
 
             local row = Instance.new("Frame")
-            row.Size = UDim2.new(1, 0, 0, 65)
+            row.Size = UDim2.new(1, 0, 0, 56)
             row.BackgroundColor3 = Library.Theme.Element
+            row.BackgroundTransparency = 0.3
             row.Parent = Page
-            Instance.new("UICorner", row).CornerRadius = UDim.new(0, 12)
+            Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
+            Utility:ApplyBorder(row)
 
             local lbl = Instance.new("TextLabel")
             lbl.Text = sConfig.Title or "Slider"
@@ -646,27 +613,17 @@ function Library:CreateWindow(config)
             lbl.TextXAlignment = Enum.TextXAlignment.Left
             lbl.Parent = row
 
-            local valLbl = Instance.new("TextLabel")
-            valLbl.Text = tostring(SliderAPI.Value)
-            valLbl.Font = Enum.Font.GothamBold
-            valLbl.TextSize = 13
-            valLbl.TextColor3 = Library.Theme.Accent
-            valLbl.Size = UDim2.new(0, 50, 0, 25)
-            valLbl.Position = UDim2.new(1, -65, 0, 5)
-            valLbl.BackgroundTransparency = 1
-            valLbl.TextXAlignment = Enum.TextXAlignment.Right
-            valLbl.Parent = row
-
             local barBtn = Instance.new("TextButton")
             barBtn.Size = UDim2.new(1, -30, 0, 20)
-            barBtn.Position = UDim2.new(0, 15, 0, 36)
+            barBtn.Position = UDim2.new(0, 15, 0, 30)
             barBtn.BackgroundTransparency = 1
             barBtn.Text = ""
             barBtn.Parent = row
 
+            -- Track garis tipis (height 3px)
             local bar = Instance.new("Frame")
-            bar.Size = UDim2.new(1, 0, 0, 6)
-            bar.Position = UDim2.new(0, 0, 0.5, -3)
+            bar.Size = UDim2.new(1, 0, 0, 3)
+            bar.Position = UDim2.new(0, 0, 0.5, -1)
             bar.BackgroundColor3 = Library.Theme.Container
             bar.Parent = barBtn
             Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
@@ -680,32 +637,44 @@ function Library:CreateWindow(config)
             
             local grad = Instance.new("UIGradient")
             grad.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Library.Theme.AccentSecondary),
-                ColorSequenceKeypoint.new(1, Library.Theme.Accent)
+                ColorSequenceKeypoint.new(0, Library.Theme.Accent),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 160, 255))
             })
             grad.Parent = fill
 
+            -- Thumb lingkaran (diameter 14px)
             local thumb = Instance.new("Frame")
-            thumb.Size = UDim2.new(0, 16, 0, 16)
-            thumb.Position = UDim2.new(1, -8, 0.5, -8)
+            thumb.Size = UDim2.new(0, 14, 0, 14)
+            thumb.Position = UDim2.new(1, -7, 0.5, -7)
             thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             thumb.Parent = fill
             Instance.new("UICorner", thumb).CornerRadius = UDim.new(1, 0)
-            
-            local thumbShadow = Instance.new("ImageLabel")
-            thumbShadow.Image = "rbxassetid://6015897843"
-            thumbShadow.ImageColor3 = Library.Theme.Accent
-            thumbShadow.ImageTransparency = 0.3
-            thumbShadow.Size = UDim2.new(1, 16, 1, 16)
-            thumbShadow.Position = UDim2.new(0, -8, 0, -8)
-            thumbShadow.BackgroundTransparency = 1
-            thumbShadow.Parent = thumb
+            Utility:ApplyBorder(thumb, 0.8)
+
+            -- Value Badge floating
+            local ValueBadge = Instance.new("Frame")
+            ValueBadge.Size = UDim2.new(0, 30, 0, 18)
+            ValueBadge.Position = UDim2.new(0.5, -15, 0, -22)
+            ValueBadge.BackgroundColor3 = Library.Theme.ElementHover
+            ValueBadge.BackgroundTransparency = 1 -- Hide initial
+            ValueBadge.Parent = thumb
+            Instance.new("UICorner", ValueBadge).CornerRadius = UDim.new(0, 4)
+
+            local ValueBadgeText = Instance.new("TextLabel")
+            ValueBadgeText.Text = tostring(SliderAPI.Value)
+            ValueBadgeText.Font = Enum.Font.GothamMedium
+            ValueBadgeText.TextSize = 11
+            ValueBadgeText.TextColor3 = Library.Theme.Text
+            ValueBadgeText.Size = UDim2.new(1, 0, 1, 0)
+            ValueBadgeText.BackgroundTransparency = 1
+            ValueBadgeText.TextTransparency = 1
+            ValueBadgeText.Parent = ValueBadge
 
             local function UpdateVisuals(val)
                 local p = (SliderAPI.Max - SliderAPI.Min) == 0 and 0 or (val - SliderAPI.Min)/(SliderAPI.Max - SliderAPI.Min)
                 p = math.clamp(p, 0, 1)
                 Utility:Tween(fill, {Size = UDim2.new(p, 0, 1, 0)}, 0.1)
-                valLbl.Text = tostring(val)
+                ValueBadgeText.Text = tostring(val)
             end
 
             local dragging = false
@@ -725,7 +694,8 @@ function Library:CreateWindow(config)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     dragging = true
                     updateByInput(input)
-                    Utility:Tween(thumb, {Size = UDim2.new(0, 20, 0, 20), Position = UDim2.new(1, -10, 0.5, -10)}, 0.2)
+                    Utility:Tween(ValueBadge, {BackgroundTransparency = 0.1, Position = UDim2.new(0.5, -15, 0, -26)}, 0.2, Enum.EasingStyle.Back)
+                    Utility:Tween(ValueBadgeText, {TextTransparency = 0}, 0.2)
                     
                     if dragConn then dragConn:Disconnect() end
                     dragConn = UserInputService.InputChanged:Connect(function(cInput)
@@ -740,7 +710,8 @@ function Library:CreateWindow(config)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     if dragging then
                         dragging = false
-                        Utility:Tween(thumb, {Size = UDim2.new(0, 16, 0, 16), Position = UDim2.new(1, -8, 0.5, -8)}, 0.2)
+                        Utility:Tween(ValueBadge, {BackgroundTransparency = 1, Position = UDim2.new(0.5, -15, 0, -22)}, 0.2)
+                        Utility:Tween(ValueBadgeText, {TextTransparency = 1}, 0.2)
                         if dragConn then dragConn:Disconnect() dragConn = nil end
                     end
                 end
@@ -772,39 +743,37 @@ function Library:CreateWindow(config)
             }
             
             local btn = Instance.new("TextButton")
-            btn.Size = UDim2.new(1, 0, 0, 48)
+            btn.Size = UDim2.new(1, 0, 0, 42)
             btn.BackgroundColor3 = Library.Theme.Element
+            btn.BackgroundTransparency = 0.3
             btn.Text = bConfig.Title or "Button"
             btn.Font = Enum.Font.GothamMedium
             btn.TextSize = 13
             btn.TextColor3 = Library.Theme.Text
             btn.AutoButtonColor = false
             btn.Parent = Page
-            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
+            Utility:ApplyBorder(btn)
             
-            local UIStroke = Instance.new("UIStroke")
-            UIStroke.Color = Library.Theme.Accent
-            UIStroke.Transparency = 0.8
-            UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-            UIStroke.Parent = btn
+            local btnScale = Instance.new("UIScale")
+            btnScale.Parent = btn
 
             btn.MouseEnter:Connect(function()
                 Utility:Tween(btn, {BackgroundColor3 = Library.Theme.ElementHover}, 0.2)
-                Utility:Tween(UIStroke, {Transparency = 0.2}, 0.2)
+                Utility:Tween(btnScale, {Scale = 1.02}, 0.2, Enum.EasingStyle.Back)
             end)
             btn.MouseLeave:Connect(function()
                 Utility:Tween(btn, {BackgroundColor3 = Library.Theme.Element}, 0.2)
-                Utility:Tween(UIStroke, {Transparency = 0.8}, 0.2)
+                Utility:Tween(btnScale, {Scale = 1}, 0.2)
             end)
             btn.MouseButton1Down:Connect(function()
-                Utility:Tween(btn, {Size = UDim2.new(1, -4, 0, 44)}, 0.1)
+                Utility:Tween(btnScale, {Scale = 0.98}, 0.1)
             end)
             btn.MouseButton1Up:Connect(function()
-                Utility:Tween(btn, {Size = UDim2.new(1, 0, 0, 48)}, 0.1)
+                Utility:Tween(btnScale, {Scale = 1.02}, 0.1)
             end)
 
             btn.MouseButton1Click:Connect(function()
-                Utility:CreateRipple(btn)
                 task.spawn(function() pcall(btnAPI.Callback) end)
             end)
 
@@ -827,14 +796,16 @@ function Library:CreateWindow(config)
             }
 
             local row = Instance.new("Frame")
-            row.Size = UDim2.new(1, 0, 0, 48)
+            row.Size = UDim2.new(1, 0, 0, 42)
             row.BackgroundColor3 = Library.Theme.Element
+            row.BackgroundTransparency = 0.3
             row.ClipsDescendants = true
             row.Parent = Page
-            Instance.new("UICorner", row).CornerRadius = UDim.new(0, 12)
+            Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
+            Utility:ApplyBorder(row)
 
             local topBtn = Instance.new("TextButton")
-            topBtn.Size = UDim2.new(1, 0, 0, 48)
+            topBtn.Size = UDim2.new(1, 0, 0, 42)
             topBtn.BackgroundTransparency = 1
             topBtn.Text = ""
             topBtn.Parent = row
@@ -851,12 +822,12 @@ function Library:CreateWindow(config)
             lbl.Parent = topBtn
 
             local icon = Instance.new("TextLabel")
-            icon.Text = "▼"
-            icon.Font = Enum.Font.GothamBold
-            icon.TextSize = 12
+            icon.Text = "˅"
+            icon.Font = Enum.Font.GothamMedium
+            icon.TextSize = 14
             icon.TextColor3 = Library.Theme.TextMuted
             icon.Size = UDim2.new(0, 20, 1, 0)
-            icon.Position = UDim2.new(1, -35, 0, 0)
+            icon.Position = UDim2.new(1, -30, 0, 0)
             icon.BackgroundTransparency = 1
             icon.Parent = topBtn
 
@@ -873,13 +844,14 @@ function Library:CreateWindow(config)
 
             local OptionContainer = Instance.new("ScrollingFrame")
             OptionContainer.Size = UDim2.new(1, -20, 0, 0)
-            OptionContainer.Position = UDim2.new(0, 10, 0, 48)
+            OptionContainer.Position = UDim2.new(0, 10, 0, 42)
             OptionContainer.BackgroundTransparency = 1
             OptionContainer.ScrollBarThickness = 2
+            OptionContainer.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
             OptionContainer.Parent = row
             
             local OList = Instance.new("UIListLayout")
-            OList.Padding = UDim.new(0, 6)
+            OList.Padding = UDim.new(0, 4)
             OList.Parent = OptionContainer
 
             local function UpdateOptions()
@@ -892,6 +864,7 @@ function Library:CreateWindow(config)
                     local optBtn = Instance.new("TextButton")
                     optBtn.Size = UDim2.new(1, 0, 0, 32)
                     optBtn.BackgroundColor3 = Library.Theme.Container
+                    optBtn.BackgroundTransparency = 0.5
                     optBtn.Text = "  " .. opt
                     optBtn.Font = Enum.Font.Gotham
                     optBtn.TextSize = 12
@@ -899,17 +872,17 @@ function Library:CreateWindow(config)
                     optBtn.TextXAlignment = Enum.TextXAlignment.Left
                     optBtn.AutoButtonColor = false
                     optBtn.Parent = OptionContainer
-                    Instance.new("UICorner", optBtn).CornerRadius = UDim.new(0, 8)
-                    totalHeight = totalHeight + 38
+                    Instance.new("UICorner", optBtn).CornerRadius = UDim.new(0, 6)
+                    totalHeight = totalHeight + 36
                     
                     optBtn.MouseEnter:Connect(function()
                         if opt ~= DropdownAPI.Value then
-                            Utility:Tween(optBtn, {BackgroundColor3 = Library.Theme.ElementHover, TextColor3 = Library.Theme.Text}, 0.2)
+                            Utility:Tween(optBtn, {BackgroundTransparency = 0, TextColor3 = Library.Theme.Text}, 0.2)
                         end
                     end)
                     optBtn.MouseLeave:Connect(function()
                         if opt ~= DropdownAPI.Value then
-                            Utility:Tween(optBtn, {BackgroundColor3 = Library.Theme.Container, TextColor3 = Library.Theme.TextMuted}, 0.2)
+                            Utility:Tween(optBtn, {BackgroundTransparency = 0.5, TextColor3 = Library.Theme.TextMuted}, 0.2)
                         end
                     end)
 
@@ -928,10 +901,10 @@ function Library:CreateWindow(config)
                     local th = UpdateOptions()
                     local targetH = math.clamp(th, 0, 160)
                     OptionContainer.Size = UDim2.new(1, -20, 0, targetH)
-                    Utility:Tween(row, {Size = UDim2.new(1, 0, 0, 48 + targetH + 10)}, 0.4, Enum.EasingStyle.Quint)
+                    Utility:Tween(row, {Size = UDim2.new(1, 0, 0, 42 + targetH + 10)}, 0.4, Enum.EasingStyle.Quint)
                     Utility:Tween(icon, {Rotation = 180}, 0.4)
                 else
-                    Utility:Tween(row, {Size = UDim2.new(1, 0, 0, 48)}, 0.4, Enum.EasingStyle.Quint)
+                    Utility:Tween(row, {Size = UDim2.new(1, 0, 0, 42)}, 0.4, Enum.EasingStyle.Quint)
                     Utility:Tween(icon, {Rotation = 0}, 0.4)
                 end
                 return self
@@ -975,20 +948,20 @@ return Library
 
 --[[
 -- ========================================================================
--- EXAMPLE USAGE (ULTRA MODERN 2025 API)
+-- EXAMPLE USAGE (macOS SONOMA / VENTURA API)
 -- ========================================================================
 
 local Library = require(path.to.this.module)
 
 local Window = Library:CreateWindow({
-    Title = "Ultra Modern Premium Hub 2025"
+    Title = "macOS Premium Hub"
 })
 
 -- Notifikasi Canggih
 Library:Notify({
-    Title = "Authentication Success",
-    Content = "Welcome back to the premium experience.",
-    Type = "Success",
+    Title = "System Connected",
+    Content = "Clean UI injected successfully.",
+    Type = "Info",
     Duration = 5
 })
 
@@ -1007,7 +980,7 @@ end)
 
 -- Chainable Method untuk Slider
 local FOVSlider = MainTab:AddSlider({
-    Title = "Field of View (FOV)",
+    Title = "Field of View",
     Min = 30,
     Max = 120,
     Default = 70
@@ -1026,13 +999,13 @@ end)
 
 -- Chainable Method untuk Button
 local KillAllBtn = MainTab:AddButton({
-    Title = "Execute Kill All"
+    Title = "Execute Script"
 }):OnClick(function()
     print("Executing Action...")
     Library:Notify({
-        Title = "Warning",
-        Content = "Executing high-risk action...",
-        Type = "Warning",
+        Title = "Executed",
+        Content = "Script is running in the background.",
+        Type = "Success",
         Duration = 3
     })
 end)
