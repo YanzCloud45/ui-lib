@@ -210,8 +210,8 @@ function Library:CreateWindow(config)
 
     -- MAIN WINDOW (Glassmorphism / Blur)
     local Main = Instance.new("Frame")
-    Main.Size = UDim2.new(0, 650, 0, 450)
-    Main.Position = UDim2.new(0.5, -325, 0.5, -225)
+    Main.Size = UDim2.new(0, 560, 0, 380)
+    Main.Position = UDim2.new(0.5, -280, 0.5, -190)
     Main.BackgroundColor3 = Library.Theme.Background
     Main.BackgroundTransparency = 0.15 
     Main.Parent = ScreenGui
@@ -260,11 +260,12 @@ function Library:CreateWindow(config)
     TrafficLayout.Padding = UDim.new(0, 8)
     TrafficLayout.Parent = TrafficContainer
 
-    local function CreateTrafficLight(color, action)
+    local function CreateTrafficLight(color, action, order)
         local btn = Instance.new("TextButton")
         btn.Size = UDim2.new(0, 12, 0, 12)
         btn.BackgroundColor3 = color
-        btn.BackgroundTransparency = 1
+        btn.BackgroundTransparency = 0.8
+        btn.LayoutOrder = order
         btn.Text = ""
         btn.Parent = TrafficContainer
         Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
@@ -278,7 +279,7 @@ function Library:CreateWindow(config)
             Utility:Tween(btn, {BackgroundTransparency = 0}, 0.15)
         end)
         btn.MouseLeave:Connect(function()
-            Utility:Tween(btn, {BackgroundTransparency = 1}, 0.15)
+            Utility:Tween(btn, {BackgroundTransparency = 0.8}, 0.15)
         end)
         btn.MouseButton1Click:Connect(action)
         return btn
@@ -289,7 +290,7 @@ function Library:CreateWindow(config)
         Utility:Tween(Main, {BackgroundTransparency = 1}, 0.3)
         task.wait(0.3)
         ScreenGui:Destroy()
-    end)
+    end, 1)
     
     local MinimizeBtn = CreateTrafficLight(Library.Theme.Minimize, function()
         Utility:Tween(UIScale, {Scale = 0.95}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
@@ -303,12 +304,12 @@ function Library:CreateWindow(config)
             Main.Visible = false
             if WindowAPI.FloatBtn then WindowAPI.FloatBtn.Visible = true end
         end)
-    end)
+    end, 2)
     
     local MaximizeBtn = CreateTrafficLight(Library.Theme.Maximize, function()
         -- Reset position to center
-        Utility:Tween(Main, {Position = UDim2.new(0.5, -325, 0.5, -225)}, 0.4, Enum.EasingStyle.Back)
-    end)
+        Utility:Tween(Main, {Position = UDim2.new(0.5, -280, 0.5, -190)}, 0.4, Enum.EasingStyle.Back)
+    end, 3)
 
     -- ========================================================================
     -- FLOATING BUTTON (SQUIRCLE)
@@ -359,7 +360,7 @@ function Library:CreateWindow(config)
     -- SIDEBAR (Finder Style)
     -- ========================================================================
     local Sidebar = Instance.new("Frame")
-    Sidebar.Size = UDim2.new(0, 160, 1, -40)
+    Sidebar.Size = UDim2.new(0, 140, 1, -40)
     Sidebar.Position = UDim2.new(0, 0, 0, 40)
     Sidebar.BackgroundTransparency = 1
     Sidebar.Parent = Main
@@ -370,8 +371,8 @@ function Library:CreateWindow(config)
     SidebarList.Parent = Sidebar
 
     local Container = Instance.new("Frame")
-    Container.Size = UDim2.new(1, -160, 1, -40)
-    Container.Position = UDim2.new(0, 160, 0, 40)
+    Container.Size = UDim2.new(1, -140, 1, -40)
+    Container.Position = UDim2.new(0, 140, 0, 40)
     Container.BackgroundTransparency = 1
     Container.Parent = Main
 
@@ -518,7 +519,7 @@ function Library:CreateWindow(config)
             }
 
             local row = Instance.new("Frame")
-            row.Size = UDim2.new(1, 0, 0, 44)
+            row.Size = UDim2.new(1, 0, 0, 38)
             row.BackgroundColor3 = Library.Theme.Element
             row.BackgroundTransparency = 0.3
             row.Parent = Page
@@ -595,7 +596,7 @@ function Library:CreateWindow(config)
             }
 
             local row = Instance.new("Frame")
-            row.Size = UDim2.new(1, 0, 0, 56)
+            row.Size = UDim2.new(1, 0, 0, 48)
             row.BackgroundColor3 = Library.Theme.Element
             row.BackgroundTransparency = 0.3
             row.Parent = Page
@@ -743,7 +744,7 @@ function Library:CreateWindow(config)
             }
             
             local btn = Instance.new("TextButton")
-            btn.Size = UDim2.new(1, 0, 0, 42)
+            btn.Size = UDim2.new(1, 0, 0, 36)
             btn.BackgroundColor3 = Library.Theme.Element
             btn.BackgroundTransparency = 0.3
             btn.Text = bConfig.Title or "Button"
@@ -796,7 +797,7 @@ function Library:CreateWindow(config)
             }
 
             local row = Instance.new("Frame")
-            row.Size = UDim2.new(1, 0, 0, 42)
+            row.Size = UDim2.new(1, 0, 0, 38)
             row.BackgroundColor3 = Library.Theme.Element
             row.BackgroundTransparency = 0.3
             row.ClipsDescendants = true
