@@ -241,75 +241,64 @@ function Library:CreateWindow(config)
     TitleText.Font = Enum.Font.GothamMedium
     TitleText.TextSize = 13
     TitleText.TextColor3 = Library.Theme.Text
-    TitleText.Position = UDim2.new(0, 0, 0, 0)
-    TitleText.Size = UDim2.new(1, 0, 1, 0)
+    TitleText.Position = UDim2.new(0, 15, 0, 0)
+    TitleText.Size = UDim2.new(1, -100, 1, 0)
     TitleText.BackgroundTransparency = 1
-    TitleText.TextXAlignment = Enum.TextXAlignment.Center
+    TitleText.TextXAlignment = Enum.TextXAlignment.Left
     TitleText.Parent = TitleBar
 
-    -- macOS TRAFFIC LIGHT BUTTONS
-    local TrafficContainer = Instance.new("Frame")
-    TrafficContainer.Size = UDim2.new(0, 60, 1, 0)
-    TrafficContainer.Position = UDim2.new(0, 15, 0, 0)
-    TrafficContainer.BackgroundTransparency = 1
-    TrafficContainer.Parent = TitleBar
+    -- WINDOWS CONTROL BUTTONS
+    local ControlContainer = Instance.new("Frame")
+    ControlContainer.Size = UDim2.new(0, 80, 1, 0)
+    ControlContainer.Position = UDim2.new(1, -85, 0, 0)
+    ControlContainer.BackgroundTransparency = 1
+    ControlContainer.Parent = TitleBar
     
-    local TrafficLayout = Instance.new("UIListLayout")
-    TrafficLayout.FillDirection = Enum.FillDirection.Horizontal
-    TrafficLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    TrafficLayout.Padding = UDim.new(0, 8)
-    TrafficLayout.Parent = TrafficContainer
+    local ControlLayout = Instance.new("UIListLayout")
+    ControlLayout.FillDirection = Enum.FillDirection.Horizontal
+    ControlLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+    ControlLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    ControlLayout.Padding = UDim.new(0, 8)
+    ControlLayout.Parent = ControlContainer
 
-    local function CreateTrafficLight(color, action, order)
+    local function CreateControlButton(icon, hoverColor, action, order)
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(0, 12, 0, 12)
-        btn.BackgroundColor3 = color
-        btn.BackgroundTransparency = 0.8
+        btn.Size = UDim2.new(0, 24, 0, 24)
+        btn.BackgroundColor3 = hoverColor
+        btn.BackgroundTransparency = 1
         btn.LayoutOrder = order
-        btn.Text = ""
-        btn.Parent = TrafficContainer
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
-        
-        local stroke = Instance.new("UIStroke")
-        stroke.Color = color
-        stroke.Thickness = 1
-        stroke.Parent = btn
+        btn.Text = icon
+        btn.TextColor3 = Library.Theme.TextMuted
+        btn.Font = Enum.Font.GothamMedium
+        btn.TextSize = 14
+        btn.Parent = ControlContainer
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
 
         btn.MouseEnter:Connect(function()
-            Utility:Tween(btn, {BackgroundTransparency = 0}, 0.15)
+            Utility:Tween(btn, {BackgroundTransparency = 0, TextColor3 = Library.Theme.Text}, 0.15)
         end)
         btn.MouseLeave:Connect(function()
-            Utility:Tween(btn, {BackgroundTransparency = 0.8}, 0.15)
+            Utility:Tween(btn, {BackgroundTransparency = 1, TextColor3 = Library.Theme.TextMuted}, 0.15)
         end)
         btn.MouseButton1Click:Connect(action)
         return btn
     end
-
-    local CloseBtn = CreateTrafficLight(Library.Theme.Close, function()
-        Utility:Tween(UIScale, {Scale = 0.95}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
-        Utility:Tween(Main, {BackgroundTransparency = 1}, 0.3)
-        task.wait(0.3)
-        ScreenGui:Destroy()
-    end, 1)
     
-    local MinimizeBtn = CreateTrafficLight(Library.Theme.Minimize, function()
-        Utility:Tween(UIScale, {Scale = 0.95}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+    local MinimizeBtn = CreateControlButton("—", Library.Theme.ElementHover, function()
+        Utility:Tween(UIScale, {Scale = 0.9}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
         local fade = Utility:Tween(Main, {BackgroundTransparency = 1}, 0.3)
-        for _, v in ipairs(Main:GetDescendants()) do
-            if v:IsA("TextLabel") or v:IsA("ImageLabel") or v:IsA("UIStroke") then
-                Utility:Tween(v, {Transparency = 1}, 0.3)
-            end
-        end
         fade.Completed:Connect(function()
             Main.Visible = false
             if WindowAPI.FloatBtn then WindowAPI.FloatBtn.Visible = true end
         end)
+    end, 1)
+
+    local CloseBtn = CreateControlButton("✕", Library.Theme.Close, function()
+        Utility:Tween(UIScale, {Scale = 0.9}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+        Utility:Tween(Main, {BackgroundTransparency = 1}, 0.3)
+        task.wait(0.3)
+        ScreenGui:Destroy()
     end, 2)
-    
-    local MaximizeBtn = CreateTrafficLight(Library.Theme.Maximize, function()
-        -- Reset position to center
-        Utility:Tween(Main, {Position = UDim2.new(0.5, -280, 0.5, -190)}, 0.4, Enum.EasingStyle.Back)
-    end, 3)
 
     -- ========================================================================
     -- FLOATING BUTTON (SQUIRCLE)
@@ -342,15 +331,6 @@ function Library:CreateWindow(config)
         FloatBtn.Visible = false
         Main.Visible = true
         Main.BackgroundTransparency = 0.15
-        for _, v in ipairs(Main:GetDescendants()) do
-            if v:IsA("TextLabel") or v:IsA("ImageLabel") then
-                Utility:Tween(v, {Transparency = 0}, 0.3)
-            elseif v:IsA("UIStroke") then
-                if v.Parent == Main then
-                    Utility:Tween(v, {Transparency = Library.Theme.BorderOpacity}, 0.3)
-                end
-            end
-        end
         Utility:Tween(UIScale, {Scale = 1}, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
     end)
     
