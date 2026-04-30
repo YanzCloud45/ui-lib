@@ -191,6 +191,64 @@ function Library:Notify(config)
 end
 
 -- ========================================================================
+-- TOOLTIP SYSTEM
+-- ========================================================================
+local TooltipGui = Instance.new("ScreenGui")
+TooltipGui.Name = "macOSTooltip"
+TooltipGui.Parent = GetGuiParent()
+TooltipGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local TooltipFrame = Instance.new("Frame")
+TooltipFrame.Size = UDim2.new(0, 0, 0, 24)
+TooltipFrame.BackgroundColor3 = Library.Theme.Container
+TooltipFrame.BackgroundTransparency = 1
+TooltipFrame.Visible = false
+TooltipFrame.Parent = TooltipGui
+Instance.new("UICorner", TooltipFrame).CornerRadius = UDim.new(0, 4)
+local TooltipStroke = Utility:ApplyBorder(TooltipFrame, 1)
+
+local TooltipText = Instance.new("TextLabel")
+TooltipText.Font = Enum.Font.Gotham
+TooltipText.TextSize = 12
+TooltipText.TextColor3 = Library.Theme.Text
+TooltipText.BackgroundTransparency = 1
+TooltipText.TextTransparency = 1
+TooltipText.Position = UDim2.new(0, 8, 0, 0)
+TooltipText.Size = UDim2.new(1, -16, 1, 0)
+TooltipText.Parent = TooltipFrame
+
+local tooltipTask = nil
+
+function Utility:ShowTooltip(text)
+    if not text or text == "" then return end
+    if tooltipTask then task.cancel(tooltipTask) end
+    
+    tooltipTask = task.spawn(function()
+        task.wait(0.5)
+        local mousePos = UserInputService:GetMouseLocation()
+        TooltipText.Text = text
+        local textBounds = TooltipText.TextBounds
+        TooltipFrame.Size = UDim2.new(0, textBounds.X + 16, 0, 24)
+        TooltipFrame.Position = UDim2.new(0, mousePos.X + 15, 0, mousePos.Y + 15)
+        TooltipFrame.Visible = true
+        
+        Utility:Tween(TooltipFrame, {BackgroundTransparency = 0.1}, 0.2)
+        Utility:Tween(TooltipStroke, {Transparency = Library.Theme.BorderOpacity}, 0.2)
+        Utility:Tween(TooltipText, {TextTransparency = 0}, 0.2)
+    end)
+end
+
+function Utility:HideTooltip()
+    if tooltipTask then task.cancel(tooltipTask) end
+    local tw = Utility:Tween(TooltipFrame, {BackgroundTransparency = 1}, 0.2)
+    Utility:Tween(TooltipStroke, {Transparency = 1}, 0.2)
+    Utility:Tween(TooltipText, {TextTransparency = 1}, 0.2)
+    tw.Completed:Connect(function()
+        TooltipFrame.Visible = false
+    end)
+end
+
+-- ========================================================================
 -- MAIN WINDOW CORE
 -- ========================================================================
 function Library:CreateWindow(config)
@@ -566,6 +624,10 @@ function Library:CreateWindow(config)
                 end
                 return self
             end
+            if tConfig.Tooltip then
+                row.MouseEnter:Connect(function() Utility:ShowTooltip(tConfig.Tooltip) end)
+                row.MouseLeave:Connect(function() Utility:HideTooltip() end)
+            end
             
             return ToggleAPI
         end
@@ -722,6 +784,10 @@ function Library:CreateWindow(config)
                 end
                 return self
             end
+            if sConfig.Tooltip then
+                row.MouseEnter:Connect(function() Utility:ShowTooltip(sConfig.Tooltip) end)
+                row.MouseLeave:Connect(function() Utility:HideTooltip() end)
+            end
             
             return SliderAPI
         end
@@ -778,6 +844,10 @@ function Library:CreateWindow(config)
             function btnAPI:OnClick(cb)
                 self.Callback = cb
                 return self
+            end
+            if bConfig.Tooltip then
+                btn.MouseEnter:Connect(function() Utility:ShowTooltip(bConfig.Tooltip) end)
+                btn.MouseLeave:Connect(function() Utility:HideTooltip() end)
             end
             
             return btnAPI
@@ -937,8 +1007,108 @@ function Library:CreateWindow(config)
                 if self.IsOpen then UpdateOptions() end
                 return self
             end
-
+            if dConfig.Tooltip then
+                row.MouseEnter:Connect(function() Utility:ShowTooltip(dConfig.Tooltip) end)
+                row.MouseLeave:Connect(function() Utility:HideTooltip() end)
+            end
+            
             return DropdownAPI
+        end
+
+        -- >>> LABEL <<<
+        function TabAPI:AddLabel(text)
+            local lblAPI = { Text = text }
+            local row = Instance.new("Frame")
+            row.Size = UDim2.new(1, 0, 0, 28)
+            row.BackgroundTransparency = 1
+            row.Parent = Page
+            
+            local lbl = Instance.new("TextLabel")
+            lbl.Text = text
+            lbl.Font = Enum.Font.Gotham
+            lbl.TextSize = 13
+            lbl.TextColor3 = Library.Theme.Text
+            lbl.Size = UDim2.new(1, -30, 1, 0)
+            lbl.Position = UDim2.new(0, 15, 0, 0)
+            lbl.BackgroundTransparency = 1
+            lbl.TextXAlignment = Enum.TextXAlignment.Left
+            lbl.Parent = row
+            
+            function lblAPI:SetText(newText)
+                self.Text = newText
+                lbl.Text = newText
+            end
+            return lblAPI
+        end
+
+        -- >>> TEXTBOX <<<
+        function TabAPI:AddTextbox(tbConfig)
+            tbConfig = tbConfig or {}
+            local tbAPI = {
+                Value = tbConfig.Default or "",
+                Callback = tbConfig.Callback or function() end
+            }
+            local row = Instance.new("Frame")
+            row.Size = UDim2.new(1, 0, 0, 42)
+            row.BackgroundTransparency = 1
+            row.Parent = Page
+
+            local sep = Instance.new("Frame")
+            sep.Size = UDim2.new(1, 0, 0, 1)
+            sep.Position = UDim2.new(0, 0, 1, -1)
+            sep.BackgroundColor3 = Library.Theme.Border
+            sep.BackgroundTransparency = 0.85
+            sep.BorderSizePixel = 0
+            sep.Parent = row
+
+            local lbl = Instance.new("TextLabel")
+            lbl.Text = tbConfig.Title or "Textbox"
+            lbl.Font = Enum.Font.GothamMedium
+            lbl.TextSize = 13
+            lbl.TextColor3 = Library.Theme.Text
+            lbl.Size = UDim2.new(1, -150, 1, 0)
+            lbl.Position = UDim2.new(0, 15, 0, 0)
+            lbl.BackgroundTransparency = 1
+            lbl.TextXAlignment = Enum.TextXAlignment.Left
+            lbl.Parent = row
+            
+            local boxBG = Instance.new("Frame")
+            boxBG.Size = UDim2.new(0, 120, 0, 26)
+            boxBG.Position = UDim2.new(1, -135, 0.5, -13)
+            boxBG.BackgroundColor3 = Library.Theme.Container
+            boxBG.Parent = row
+            Instance.new("UICorner", boxBG).CornerRadius = UDim.new(0, 6)
+            Utility:ApplyBorder(boxBG, 0.5)
+
+            local box = Instance.new("TextBox")
+            box.Size = UDim2.new(1, -16, 1, 0)
+            box.Position = UDim2.new(0, 8, 0, 0)
+            box.BackgroundTransparency = 1
+            box.Text = tbAPI.Value
+            box.PlaceholderText = tbConfig.Placeholder or "..."
+            box.Font = Enum.Font.Gotham
+            box.TextSize = 12
+            box.TextColor3 = Library.Theme.Text
+            box.PlaceholderColor3 = Library.Theme.TextMuted
+            box.ClearTextOnFocus = false
+            box.Parent = boxBG
+
+            box.FocusLost:Connect(function(enterPressed)
+                tbAPI.Value = box.Text
+                task.spawn(function() pcall(tbAPI.Callback, tbAPI.Value) end)
+            end)
+
+            if tbConfig.Tooltip then
+                row.MouseEnter:Connect(function() Utility:ShowTooltip(tbConfig.Tooltip) end)
+                row.MouseLeave:Connect(function() Utility:HideTooltip() end)
+            end
+
+            function tbAPI:OnChanged(cb)
+                self.Callback = cb
+                return self
+            end
+            
+            return tbAPI
         end
 
         return TabAPI
